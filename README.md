@@ -1,5 +1,5 @@
 # MetaPlant
-[![Watch the video](https://media.githubusercontent.com/media/jieguann/Thesis-Prototype5-MetaPlant/main/Media/91587d3a496bb2d3d0eb71b7274f651.png)](https://www.youtube.com/watch?v=8-mS2F5Q5aM&t=3s)
+[![Watch the video](https://img.youtube.com/vi/T-D1KVIuvjA/maxresdefault.jpg)](https://www.youtube.com/watch?v=8-mS2F5Q5aM&t=3s)
 
 ## MQTT Install
 http://www.steves-internet-guide.com/install-mosquitto-broker/
