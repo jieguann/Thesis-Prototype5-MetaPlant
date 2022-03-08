@@ -52,7 +52,11 @@ public class LSystemsGenerator : MonoBehaviour
     private string currentString = string.Empty;
     private Vector3 initialPosition = Vector3.zero;
     private float[] randomRotationValues = new float[100];
-    
+
+
+    private string cloneString = "[";
+    private string cloneStringFrame;
+    private int currentPosition = 1;
     private void Start()
     {
         titleLastFrame = title;
@@ -165,17 +169,152 @@ public class LSystemsGenerator : MonoBehaviour
         if (iterationsLastFrame != iterations ||
                 angleLastFrame  != angle ||
                 widthLastFrame  != width ||
-                lengthLastFrame != length)
+                lengthLastFrame != length
+                )
         {
             ResetFlags();
             Generate();
+            //animateTree();
         }
 
         
 
     }
+    public void animateTree()
+    {
+        //cloneString = axiom;
+        //cloneString += currentString[currentPosition++];
+        cloneString = currentString;
+        Debug.Log(cloneString);
 
-    private void  Generate()
+        for (int i = 0; i < cloneString.Length; i++)
+        {
+            switch (cloneString[i])
+            {
+                case 'F':
+                    initialPosition = transform.position;
+                    transform.Translate(Vector3.up * 2 * length);
+
+                    GameObject fLine = cloneString[(i + 1) % cloneString.Length] == 'X' || cloneString[(i + 3) % cloneString.Length] == 'F' && cloneString[(i + 4) % cloneString.Length] == 'X' ? Instantiate(leaf) : Instantiate(branch);
+                    fLine.transform.SetParent(Tree.transform);
+                    fLine.GetComponent<LineRenderer>().SetPosition(0, initialPosition);
+                    fLine.GetComponent<LineRenderer>().SetPosition(1, transform.position);
+                    fLine.GetComponent<LineRenderer>().startWidth = width;
+                    fLine.GetComponent<LineRenderer>().endWidth = width;
+
+                    var fLineC = fLine.transform.Find("Sphere");
+                    if (fLineC != null)
+                    {
+                        fLine.gameObject.SetActive(true);
+                        fLineC.position = initialPosition;
+
+                        //if (iterations > MAX_GROUWITERACTIONS)
+
+
+                        fLineCScale(iterations * baseScale);
+                        particleControl(iterations * baseScale * 5f);
+                        /*
+                        fLineCScale(2, 2* baseScale);
+                        fLineCScale(3, 3* baseScale);
+                        fLineCScale(4, 4* baseScale);
+                        fLineCScale(5, 5* baseScale);
+                        fLineCScale(6, 6* baseScale);
+                        fLineCScale(7, 7* baseScale);
+                        fLineCScale(8, 8* baseScale);
+                        fLineCScale(9, 9* baseScale);
+                        fLineCScale(10, 10* baseScale);
+                        */
+                        void fLineCScale(float scale)
+                        {
+                            fLineC.localScale = new Vector3(scale, scale, scale);
+
+                        }
+
+                        void particleControl(float scale)
+                        {
+                            if (iterations > 5 && iterations < 9)
+                            {
+                                fireParticles.SetActive(true);
+                                fireParticles.transform.localScale = new Vector3(scale, scale, scale);
+                                rainEffectParticles.SetActive(false);
+                                otherEffectParticles.SetActive(false);
+
+                                //control.updateLight(0.7109f, 0.4231f);
+                                //control.HttpPutLight(0.7109f, 0.4231f);
+                            }
+                            else if (iterations >= 9)
+                            {
+                                rainEffectParticles.SetActive(true);
+                                fireParticles.SetActive(false);
+                                otherEffectParticles.SetActive(false);
+                                //control.HttpPutLight(0f, 0f);
+                            }
+                            else
+                            {
+                                fireParticles.SetActive(false);
+                                rainEffectParticles.SetActive(false);
+                                otherEffectParticles.SetActive(true);
+
+                            }
+                        }
+                    }
+
+
+
+
+                    /*
+                    if(fLine.transform == leaf.transform)
+                    {
+                        GameObject fObject = Instantiate(dynamicObject, Tree.transform);
+                        fObject.transform.position = initialPosition;
+                    }
+                    */
+
+
+
+
+
+                    break;
+
+                case 'X':
+                    break;
+
+                case '+':
+                    transform.Rotate(Vector3.back * angle * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
+                    break;
+
+                case '-':
+                    transform.Rotate(Vector3.forward * angle * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
+                    break;
+
+                case '*':
+                    transform.Rotate(Vector3.up * 120 * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
+                    break;
+
+                case '/':
+                    transform.Rotate(Vector3.down * 120 * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
+                    break;
+
+                case '[':
+                    transformStack.Push(new TransformInfo()
+                    {
+                        position = transform.position,
+                        rotation = transform.rotation
+                    });
+                    break;
+
+                case ']':
+                    TransformInfo ti = transformStack.Pop();
+                    transform.position = ti.position;
+                    transform.rotation = ti.rotation;
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Invalid L-tree operation");
+            }
+        }
+    }
+    private void Generate()
     {
         Destroy(Tree);
 
@@ -183,10 +322,11 @@ public class LSystemsGenerator : MonoBehaviour
         Tree.transform.localScale = new Vector3(treeSize, treeSize, treeSize);
 
         currentString = axiom;
-
+        
+        //currentPosition = currentString.Length - 1;
         StringBuilder sb = new StringBuilder();
 
-        if(iterations <= MAX_GROUWITERACTIONS)
+        if (iterations <= MAX_GROUWITERACTIONS)
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -212,137 +352,15 @@ public class LSystemsGenerator : MonoBehaviour
                 sb = new StringBuilder();
             }
         }
-        
+
+
+        //cloneString = currentString;
+
 
         Debug.Log(currentString);
-        
-        for (int i = 0; i < currentString.Length; i++)
-        {
-            switch (currentString[i])
-            {
-                case 'F':                    
-                    initialPosition = transform.position;
-                    transform.Translate(Vector3.up * 2 * length);                    
-
-                    GameObject fLine = currentString[(i + 1) % currentString.Length] == 'X' || currentString[(i + 3) % currentString.Length] == 'F' && currentString[(i + 4) % currentString.Length] == 'X' ? Instantiate(leaf) : Instantiate(branch);
-                    fLine.transform.SetParent(Tree.transform);
-                    fLine.GetComponent<LineRenderer>().SetPosition(0, initialPosition);
-                    fLine.GetComponent<LineRenderer>().SetPosition(1, transform.position);
-                    fLine.GetComponent<LineRenderer>().startWidth = width;
-                    fLine.GetComponent<LineRenderer>().endWidth = width;
-
-                    var fLineC = fLine.transform.Find("Sphere");
-                    if (fLineC != null)
-                    {
-                        fLine.gameObject.SetActive(true);
-                        fLineC.position = initialPosition;
-
-                        //if (iterations > MAX_GROUWITERACTIONS)
-
-                        
-                        fLineCScale(iterations*baseScale);
-                        particleControl(iterations * baseScale * 5f);
-                        /*
-                        fLineCScale(2, 2* baseScale);
-                        fLineCScale(3, 3* baseScale);
-                        fLineCScale(4, 4* baseScale);
-                        fLineCScale(5, 5* baseScale);
-                        fLineCScale(6, 6* baseScale);
-                        fLineCScale(7, 7* baseScale);
-                        fLineCScale(8, 8* baseScale);
-                        fLineCScale(9, 9* baseScale);
-                        fLineCScale(10, 10* baseScale);
-                        */
-                        void fLineCScale(float scale)
-                        {
-                            fLineC.localScale = new Vector3(scale, scale, scale);
-
-                        }
-
-                        void particleControl(float scale)
-                        {
-                            if (iterations > 5 && iterations <9)
-                            {
-                                fireParticles.SetActive(true);
-                                fireParticles.transform.localScale = new Vector3(scale, scale, scale);
-                                rainEffectParticles.SetActive(false);
-                                otherEffectParticles.SetActive(false);
-
-                                //control.updateLight(0.7109f, 0.4231f);
-                                //control.HttpPutLight(0.7109f, 0.4231f);
-                            }
-                            else if(iterations >= 9)
-                            {
-                                rainEffectParticles.SetActive(true);
-                                fireParticles.SetActive(false);
-                                otherEffectParticles.SetActive(false);
-                                //control.HttpPutLight(0f, 0f);
-                            }
-                            else
-                            {
-                                fireParticles.SetActive(false);
-                                rainEffectParticles.SetActive(false);
-                                otherEffectParticles.SetActive(true);
-
-                            }
-                        }
-                    }
-
-                    
-                    
-                    
-                    /*
-                    if(fLine.transform == leaf.transform)
-                    {
-                        GameObject fObject = Instantiate(dynamicObject, Tree.transform);
-                        fObject.transform.position = initialPosition;
-                    }
-                    */
 
 
-
-
-
-                            break;
-
-                case 'X':                
-                    break;
-
-                case '+':
-                    transform.Rotate(Vector3.back * angle * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
-                    break;
-
-                case '-':                                      
-                    transform.Rotate(Vector3.forward * angle * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
-                    break;
-
-                case '*':
-                    transform.Rotate(Vector3.up * 120 * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
-                    break;
-
-                case '/':
-                    transform.Rotate(Vector3.down* 120 * (1 + variance / 100 * randomRotationValues[i % randomRotationValues.Length]));
-                    break;
-
-                case '[':
-                    transformStack.Push(new TransformInfo()
-                    {
-                        position = transform.position,
-                        rotation = transform.rotation
-                    });
-                    break;
-
-                case ']':
-                    TransformInfo ti = transformStack.Pop();
-                    transform.position = ti.position;
-                    transform.rotation = ti.rotation;
-                    break;
-
-                default:
-                    throw new InvalidOperationException("Invalid L-tree operation");
-            }
-        }
-
+        animateTree();
         Tree.transform.rotation = Quaternion.Euler(0, HUD.rotation.value, 0);
     }
 
@@ -448,6 +466,7 @@ public class LSystemsGenerator : MonoBehaviour
         angleLastFrame = angle;
         widthLastFrame = width;
         lengthLastFrame = length;
+        cloneStringFrame = cloneString;
     }
 
     private void ResetTreeValues()
