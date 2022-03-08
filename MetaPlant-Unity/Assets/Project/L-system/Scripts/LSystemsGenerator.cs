@@ -36,7 +36,7 @@ public class LSystemsGenerator : MonoBehaviour
     [SerializeField] private GameObject rainEffectParticles;
     [SerializeField] private GameObject otherEffectParticles;
     
-    public LightControl control;
+    //public LightControl control;
     //[SerializeField] private GameObject dynamicObject;
     [SerializeField] private HUDScript HUD;
 
